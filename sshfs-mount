@@ -1,0 +1,84 @@
+#!/bin/bash
+# author: doOnline.nl, Danny v. Dooijeweert
+# required: sshfs
+# TODO:
+# - Add "Create Mountpoint if dir does not exist"
+# - Add "Test for sshfs dependency installed"
+
+# Static Vars
+_NAME="`basename $0`";
+_VERS='1.1.3';
+_DESC="$_NAME"' is a custom script to easily mount a remote file-system with sshfs and fuse. Current version: '"$_VERS";
+
+# Non-Static Vars
+DEBUG=0;
+PERSISTENT=1;
+MOUNTPOINT='/media';
+KEY='~/.ssh/id_rsa';
+HOST='opensshd@77.72.144.197:/cygdisk/l/share';
+UID=0000;
+GID=0027;W
+SSHOPT='allow_other,nonempty,reconnect';
+# Argument Handling
+ARGS=0;
+OPTIND=1;
+while getopts "hdk:r:m:u:g:o:" opt; do
+    ARGS=1;
+    case "$opt" in
+    h)
+        printf "[$_NAME] v$_VERS help: -parameter (argument type) : default
+		\n-d (debug) : ${DEBUG}
+		\n-k (ssh-key) : ${KEY}
+		\n-r (remote file-system user@server[:/directory]) : ${HOST}
+		\n-m (local mount point) : ${MOUNTPOINT}
+		\n-u (unix User ID File-system Permissions) : ${UID} (DISABLED)
+		\n-g (unix Group ID File-system Permissions) : ${GID} (DISABLED)
+		\n-o (ssh options like 'allow_other,nonempty,reconnect') : ${SSHOPT} (DISABLED)
+		\n";
+        exit 0;
+	;;
+    v)  DEBUG=1;
+        ;;
+    k)  KEY=$OPTARG;
+	;;
+    r)  HOST=$OPTARG;
+	;;
+    m)  MOUNTPOINT=$OPTARG;
+        ;;
+    \?) echo -e "[$_NAME] Option -$OPTARG does not exist or is disabled, type $_NAME -h for help.";
+        exit 1;
+        ;;
+    :)  echo -e "[$_NAME] Option -$OPTARG requires an argument, type $_NAME -h for help.";
+      	exit 1;
+	;;
+    esac
+done
+
+shift $((OPTIND-1));
+[ "${1:-}" = "--" ] && shift;
+
+if [ $ARGS = 0 ]; then
+    echo -e "[$_NAME] No options and arguments where given, type $_NAME -h for command usage info and help.";
+    exit 1;
+fi
+
+# Script ------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Display Configuration
+if [ $DEBUG = 1 ]; then
+    printf "[$_NAME] Configuration:\nMount point:'${MOUNTPOINT}', \nRemote host:'${HOST}',\nSSH-Key:'${KEY}', \nDebug:${DEBUG}, \nPersitent:${PERSISTENT}.\n";
+fi
+
+# Execute SSHFS
+sshfs -C -o ${SSHOPT},uid="${UID}",gid="${GID}",IdentityFile="${KEY}" "${HOST}" "${MOUNTPOINT}";
+
+# Display Error/Success Message
+if [ $? -ne 0 ] && [ $DEBUG = 1 ]; then
+     printf "[$_NAME] sshfs/fuse/$_NAME reported an error, make sure 'sshfs' is installed.\nAlso make sure the local directory to mount the remote file-system to should be free (this could happen to be false if previous ssh-mount commands failed).\nType $_NAME -h for usage info and help.\n";
+     exit 1;
+elif [ $DEBUG = 1 ]; then
+     echo -e "[$_NAME] Successfully mounted ${HOST} at ${MOUNTPOINT}.";
+fi
+
+# End Script
+exit 0;
