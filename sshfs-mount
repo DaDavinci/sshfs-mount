@@ -1,13 +1,18 @@
 #!/bin/bash
 # author: doOnline.nl, Danny v. Dooijeweert
 # required: sshfs
-# TODO:
-# - Add "Create Mountpoint if dir does not exist"
-# - Add "Test for sshfs dependency installed"
+# future features:
+# - Add "Create Mountpoint if dir does not exist."
+# - Add "Test for sshfs dependency installed."
+# - Add "SSH -o option handling."
+# - Add "Installer script to create a directory in PATH so you can save configurations for different connections."
+# - Add "Saving -s option so each connection on successful execute can be saved"
+#       "and an -l option to load those connections without full command configuration eash time."
+# - Add "Possible boot command execution to automatically mount on local machine after shutdown."
 
 # Static Vars
 _NAME="`basename $0`";
-_VERS='1.1.3';
+_VERS='1.2.5';
 _DESC="$_NAME"' is a custom script to easily mount a remote file-system with sshfs and fuse. Current version: '"$_VERS";
 
 # Non-Static Vars
@@ -15,10 +20,10 @@ DEBUG=0;
 PERSISTENT=1;
 MOUNTPOINT='/media';
 KEY='~/.ssh/id_rsa';
-HOST='opensshd@77.72.144.197:/cygdisk/l/share';
-UID=0000;
-GID=0027;W
-SSHOPT='allow_other,nonempty,reconnect';
+HOST='storage@84.24.144.12:~/Storage';
+UID_=0000;
+GID_=0027;
+OPT='allow_other,nonempty,reconnect';
 # Argument Handling
 ARGS=0;
 OPTIND=1;
@@ -26,18 +31,21 @@ while getopts "hdk:r:m:u:g:o:" opt; do
     ARGS=1;
     case "$opt" in
     h)
-        printf "[$_NAME] v$_VERS help: -parameter (argument type) : default
-		\n-d (debug) : ${DEBUG}
-		\n-k (ssh-key) : ${KEY}
-		\n-r (remote file-system user@server[:/directory]) : ${HOST}
-		\n-m (local mount point) : ${MOUNTPOINT}
-		\n-u (unix User ID File-system Permissions) : ${UID} (DISABLED)
-		\n-g (unix Group ID File-system Permissions) : ${GID} (DISABLED)
-		\n-o (ssh options like 'allow_other,nonempty,reconnect') : ${SSHOPT} (DISABLED)
+        printf "[$_NAME] v$_VERS help: -option 'argument' : default -> 'argument type',
+		\n---------------------------------------------------------------------
+		\n-d 'sets debug enabled during execute.' : ${DEBUG} -> 'boolean',
+		\n-k 'ssh-key saved location.' : ${KEY} -> 'filepath ~/.ssh/id_rsa',
+		\n-r 'remote file-system.' : ${HOST} -> 'connection storage@10.47.0.20[:~/Storage/share]',
+		\n-m 'local mount point directory.' : ${MOUNTPOINT} -> 'filepath ~/Storage/H2tkdsh00',
+		\n-u 'unix User-ID file-system permissions.' : ${UID_} (DISABLED) -> 'int 0000',
+		\n-g 'unix Group-ID file-system permissions.' : ${GID_} (DISABLED) -> 'int 0027',
+		\n-o 'ssh options like: allow_other,reconnect,etc...' : ${SSHOPT} (DISABLED) -> 'ssh client config -o options: EscapeChar=none,IdentityFile='${KEY}',etc...',
+		\n---------------------------------------------------------------------
+		\n$_DESC
 		\n";
         exit 0;
 	;;
-    v)  DEBUG=1;
+    d)  DEBUG=1;
         ;;
     k)  KEY=$OPTARG;
 	;;
@@ -70,7 +78,7 @@ if [ $DEBUG = 1 ]; then
 fi
 
 # Execute SSHFS
-sshfs -C -o ${SSHOPT},uid="${UID}",gid="${GID}",IdentityFile="${KEY}" "${HOST}" "${MOUNTPOINT}";
+sshfs -C -o ${SSHOPT},uid=${UID_},gid=${GID_},IdentityFile=${KEY} ${HOST} ${MOUNTPOINT};
 
 # Display Error/Success Message
 if [ $? -ne 0 ] && [ $DEBUG = 1 ]; then
