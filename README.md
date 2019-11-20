@@ -7,12 +7,21 @@ A wrapper for the sshfs linux package. Used for mounting remote ssh-enabled file
 ## Install
 Step 1 (Cloning git repository):
 ```
-git clone https://github.com/DoOnlineNL/sshfs-mount.git
+git clone https://github.com/DoOnlineNL/sshfs-mount.git;
 ```
 Step 2 (Make executable and run):
 ```
-chmod a+x ./sshfs-mount/sshfs-mount && ./sshfs-mount/sshfs-mount -h
+chmod a+x ./sshfs-mount/sshfs-mount && ./sshfs-mount/sshfs-mount -h;
 ```
+Step 3 (Create symlink as non-root):
+```
+path=$(echo "`readlink -f -- $(dirname -- $0)`/sshfs-mount") && cd /usr/bin && ln -s "${path}"/sshfs-mount sshfs-mount;
+```
+Step 4 (Test the symlink, it should work troughout the whole server without selecting the installed sshfs-mount file)
+```
+cd ~/ && sshfs-mount -h && echo -n "Successfully installed sshfs-mount";
+```
+
 ## License
 Repository sshfs-mount is licensed with MIT Licensing
 <hr>
