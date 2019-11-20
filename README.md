@@ -11,7 +11,7 @@ git clone https://github.com/DoOnlineNL/sshfs-mount.git;
 ```
 Step 2 (Make executable and run):
 ```
-chmod a+x ./sshfs-mount/sshfs-mount && ./sshfs-mount/sshfs-mount -h;
+chmod a+x ./sshfs-mount/sshfs-mount && ./sshfs-mount/sshfs-mount;
 ```
 Step 3 (Create symlink as non-root):
 ```
@@ -19,8 +19,7 @@ path=$(echo "`readlink -f -- $(dirname -- $0)`/sshfs-mount") && cd /usr/bin && s
 ```
 Step 4 (Test the symlink, it should work troughout the whole server without selecting the installed sshfs-mount file)
 ```
-sshfs-mount -h && echo -n "Successfully installed sshfs-mount, Cleaning download directory now!..." && 
-sudo rm -r sshfs-mount/ && echo -n "Finished installing sshfs for this user. Please visit https://doonline.nl/ for more of this good stuff...";
+sshfs-mount && echo -n "Successfully installed sshfs-mount, Cleaning download directory now..." && sudo rm -r sshfs-mount/ && echo -n "Finished installing sshfs for this user. Please visit https://doonline.nl/ for more of this good stuff...";
 ```
 
 ## License
