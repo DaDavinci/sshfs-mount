@@ -12,40 +12,45 @@
 
 # Static Vars
 _NAME="`basename $0`";
-_VERS='1.2.5';
+_VERS='1.3.2';
 _DESC="$_NAME"' is a custom script to easily mount a remote file-system with sshfs and fuse. Current version: '"$_VERS";
 
 # Non-Static Vars
 DEBUG=0;
 PERSISTENT=1;
-MOUNTPOINT='/media';
+MOUNTPOINT='/mnt/data/Storage';
 KEY='~/.ssh/id_rsa';
-HOST='storage@84.24.144.12:~/Storage';
-UID_=0000;
+HOST='root@126.0.0.1:/mnt/data/Storage';
+UID_=0022;
 GID_=0027;
-OPT='allow_other,nonempty,reconnect';
+SSHOPT='allow_other,reconnect';
+SSHPORT=22;
 # Argument Handling
 ARGS=0;
 OPTIND=1;
-while getopts "hdk:r:m:u:g:o:" opt; do
+while getopts "hdk:r:m:u:g:o:p:" opt; do
     ARGS=1;
     case "$opt" in
     h)
-        printf "[$_NAME] v$_VERS help: -option 'argument' : default -> 'argument type',
-		\n---------------------------------------------------------------------
-		\n-d 'sets debug enabled during execute.' : ${DEBUG} -> 'boolean',
-		\n-k 'ssh-key saved location.' : ${KEY} -> 'filepath ~/.ssh/id_rsa',
-		\n-r 'remote file-system.' : ${HOST} -> 'connection storage@10.47.0.20[:~/Storage/share]',
-		\n-m 'local mount point directory.' : ${MOUNTPOINT} -> 'filepath ~/Storage/H2tkdsh00',
-		\n-u 'unix User-ID file-system permissions.' : ${UID_} (DISABLED) -> 'int 0000',
-		\n-g 'unix Group-ID file-system permissions.' : ${GID_} (DISABLED) -> 'int 0027',
-		\n-o 'ssh options like: allow_other,reconnect,etc...' : ${SSHOPT} (DISABLED) -> 'ssh client config -o options: EscapeChar=none,IdentityFile='${KEY}',etc...',
-		\n---------------------------------------------------------------------
-		\n$_DESC
-		\n";
+        printf "
+[$_NAME] v$_VERS help: -option 'argument' : default -> 'argument type',
+---------------------------------------------------------------------
+-d 'sets debug enabled during execute.' : ${DEBUG} -> 'boolean 1',
+-k 'ssh-key saved location.' : ${KEY} -> 'filepath ~/.ssh/id_rsa',
+-r 'remote file-system.' : ${HOST} -> 'connection user@server.domain[:/media]',
+-m 'local mount point directory.' : ${MOUNTPOINT} -> 'filepath ${MOUNTPOINT}',
+-u 'unix User-ID file-system permissions.' : ${UID_} (DISABLED) -> 'int ${UID_} (root)',
+-g 'unix Group-ID file-system permissions.' : ${GID_} (DISABLED) -> 'int ${GID_} (sudo/other)',
+-o 'sshfs options. a useful link is https://jlk.fjfi.cvut.cz/arch/manpages/man/sshfs.1' : ${SSHOPT} (DISABLED)\n -> 'options ${SSHOPT}',EscapeChar=none,compression=yes',
+-p 'sshfs remote port.' : ${SSHPORT} -> 'int 22',
+---------------------------------------------------------------------
+$_DESC
+\n";
         exit 0;
 	;;
     d)  DEBUG=1;
+        ;;
+    p)  SSHPORT=$OPTARG;
         ;;
     k)  KEY=$OPTARG;
 	;;
@@ -77,15 +82,18 @@ if [ $DEBUG = 1 ]; then
     printf "[$_NAME] Configuration:\nMount point:'${MOUNTPOINT}', \nRemote host:'${HOST}',\nSSH-Key:'${KEY}', \nDebug:${DEBUG}, \nPersitent:${PERSISTENT}.\n";
 fi
 
-# Execute SSHFS
-sshfs -C -o ${SSHOPT},uid=${UID_},gid=${GID_},IdentityFile=${KEY} ${HOST} ${MOUNTPOINT};
+# Check if mountpoint exists and create it if not
+[ ! -d "$MOUNTPOINT" ] && echo -e "Mountpoint directory does not exist, creating mountpoint now..." && mkdir -p ${MOUNTPOINT};
+
+# Execute SSHFS 
+sshfs -p ${SSHPORT} -o ${SSHOPT},uid=${UID_},gid=${GID_}.IdentityFile=${KEY} ${HOST} ${MOUNTPOINT};
 
 # Display Error/Success Message
 if [ $? -ne 0 ] && [ $DEBUG = 1 ]; then
      printf "[$_NAME] sshfs/fuse/$_NAME reported an error, make sure 'sshfs' is installed.\nAlso make sure the local directory to mount the remote file-system to should be free (this could happen to be false if previous ssh-mount commands failed).\nType $_NAME -h for usage info and help.\n";
      exit 1;
 elif [ $DEBUG = 1 ]; then
-     echo -e "[$_NAME] Successfully mounted ${HOST} at ${MOUNTPOINT}.";
+     echo -e "[$_NAME] Successfully mounted ${HOST} at ${MOUNTPOINT} via port ${SSHPORT}.";
 fi
 
 # End Script
