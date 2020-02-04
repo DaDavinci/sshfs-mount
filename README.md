@@ -15,7 +15,7 @@ chmod a+x ./sshfs-mount/sshfs-mount && ./sshfs-mount/sshfs-mount;
 ```
 Step 3 (Create symlink as non-root):
 ```
-path=$(echo "`readlink -f -- $(dirname -- $0)`/sshfs-mount") && cd /usr/bin && sudo mv "${path}"/sshfs-mount ./sshfs-mount && cd "${path}"/../;
+path=$(echo "`readlink -f -- $(dirname -- $0)`") && cd /usr/bin && sudo mv "${path}"/sshfs-mount ./sshfs-mount && cd "${path}"/../;
 ```
 Step 4 (Test the symlink, it should work troughout the whole server without selecting the installed sshfs-mount file)
 ```
